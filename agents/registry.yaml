@@ -1,0 +1,124 @@
+version: 1
+
+llm:
+  provider: nvidia_nim
+  model: nvidia/nemotron-3-ultra-550b-a55b
+  base_url_env: LLM_BASE_URL
+  api_key_env: LLM_API_KEY
+  notes:
+    - Use hosted NVIDIA first for fast iteration.
+    - Swap only the base URL when moving to self-hosted NIM.
+
+mcp:
+  url_env: MCP_SERVER_URL
+  transport_env: MCP_SERVER_TRANSPORT
+  auth_token_env: MCP_SERVER_AUTH_TOKEN
+  expected_tools:
+    - search_video_ads_for_buyer
+    - get_ad_by_id
+    - rank_ads_for_buyer
+    - explain_ad_match
+    - get_seller_billing_status
+    - create_billing_support_ticket
+
+agents:
+  - name: top_router_agent
+    prompt_file: prompts/top_router_agent.md
+    role: top_level_domain_router
+    hands_off_to:
+      - buyer_router_agent
+      - seller_router_agent
+      - qa_agent
+    tools: []
+
+  - name: buyer_router_agent
+    prompt_file: prompts/buyer_router_agent.md
+    role: buyer_subgraph_router
+    hands_off_to:
+      - buyer_search_agent
+      - buyer_match_explainer_agent
+    tools: []
+
+  - name: buyer_search_agent
+    prompt_file: prompts/buyer_search_agent.md
+    role: buyer_search_and_ranking
+    hands_off_to: []
+    tools:
+      - search_video_ads_for_buyer
+      - rank_ads_for_buyer
+
+  - name: buyer_match_explainer_agent
+    prompt_file: prompts/buyer_match_explainer_agent.md
+    role: buyer_match_explanation
+    hands_off_to: []
+    tools:
+      - explain_ad_match
+
+  - name: seller_router_agent
+    prompt_file: prompts/seller_router_agent.md
+    role: seller_subgraph_router
+    hands_off_to:
+      - seller_ad_ops_agent
+      - seller_billing_agent
+      - seller_support_agent
+    tools: []
+
+  - name: seller_ad_ops_agent
+    prompt_file: prompts/seller_ad_ops_agent.md
+    role: seller_ad_record_lookup
+    hands_off_to: []
+    tools:
+      - get_ad_by_id
+
+  - name: seller_billing_agent
+    prompt_file: prompts/seller_billing_agent.md
+    role: seller_billing_support
+    hands_off_to: []
+    tools:
+      - get_seller_billing_status
+      - create_billing_support_ticket
+
+  - name: seller_support_agent
+    prompt_file: prompts/seller_support_agent.md
+    role: mixed_support_triage
+    hands_off_to:
+      - billing_agent
+      - ad_ops_agent
+      - ad_search_agent
+    tools:
+      - get_ad_by_id
+      - get_seller_billing_status
+      - explain_ad_match
+
+  - name: qa_agent
+    prompt_file: prompts/qa_agent.md
+    role: tool_and_workflow_validation
+    hands_off_to: []
+    tools:
+      - search_video_ads_for_buyer
+      - rank_ads_for_buyer
+      - explain_ad_match
+      - get_ad_by_id
+      - get_seller_billing_status
+
+routing_hints:
+  buyer_search_agent:
+    - buyer asks for relevant ads
+    - user wants ranked matches
+    - user asks for video ads
+  buyer_match_explainer_agent:
+    - user asks why an ad matched
+    - user provides an ad_id and a buyer query
+  seller_ad_ops_agent:
+    - user asks to inspect a specific ad
+    - user provides an ad_id
+  seller_billing_agent:
+    - seller asks about billing
+    - user asks for support ticket creation
+  seller_support_agent:
+    - mixed campaign + billing issues
+    - ambiguous seller support workflows
+  qa_agent:
+    - regression checks
+    - tool validation
+    - smoke tests

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Ad Engine Buyer Assistant</title>
+    <link rel="stylesheet" href="/static/chat.css" />
+  </head>
+  <body data-site="buyer" data-default-audience="buyer">
+    <main class="app-shell">
+      <nav class="site-nav">
+        <a href="/buyer" aria-current="page">Buyer site</a>
+        <a href="/seller">Seller site</a>
+        <a href="/chat">Agent hub</a>
+      </nav>
+
+      <section class="hero">
+        <p class="eyebrow">Buyer Assistant</p>
+        <h1>Find Ads That Match Buyer Intent</h1>
+        <p class="lede">
+          Search video ads, compare results, and ask why a specific ad matches a buyer query.
+        </p>
+      </section>
+
+      <section class="controls">
+        <label id="audienceGroup" class="hidden">
+          Audience
+          <select id="audience">
+            <option value="buyer" selected>Buyer</option>
+          </select>
+        </label>
+
+        <label>
+          Task
+          <select id="task">
+            <option value="search">Search video ads</option>
+            <option value="explain">Explain match</option>
+          </select>
+        </label>
+
+        <button id="sampleBtn" type="button">Load example</button>
+      </section>
+
+      <section class="quick-list">
+        <span>Try:</span>
+        <button class="quick-chip" type="button" data-prompt="Find video ads for cat furniture.">Cat furniture</button>
+        <button class="quick-chip" type="button" data-prompt="Find video ads for trail running shoes.">Trail running shoes</button>
+        <button class="quick-chip" type="button" data-prompt="Explain why ad aa622160-c5a9-4241-b8ca-77b30dc79a3a matches cat furniture.">Explain a match</button>
+      </section>
+
+      <section id="messages" class="messages" aria-live="polite"></section>
+
+      <form id="chatForm" class="composer">
+        <label class="composer-label" for="prompt">Buyer request</label>
+        <textarea
+          id="prompt"
+          name="prompt"
+          rows="5"
+          placeholder="Example: Find video ads for cat furniture."
+          required
+        ></textarea>
+        <div class="composer-actions">
+          <button id="sendBtn" type="submit">Send</button>
+        </div>
+      </form>
+    </main>
+
+    <template id="messageTemplate">
+      <article class="message">
+        <div class="message-meta"></div>
+        <div class="message-body"></div>
+      </article>
+    </template>
+
+    <script src="/static/chat.js"></script>
+  </body>
+</html>

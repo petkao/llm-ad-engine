@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Ad Engine Chat</title>
+    <link rel="stylesheet" href="/static/chat.css" />
+  </head>
+  <body data-site="hub" data-default-audience="auto">
+    <main class="app-shell">
+      <nav class="site-nav">
+        <a href="/buyer">Buyer site</a>
+        <a href="/seller">Seller site</a>
+        <a href="/chat" aria-current="page">Agent hub</a>
+      </nav>
+
+      <section class="hero">
+        <p class="eyebrow">LLM Ad Engine</p>
+        <h1>Agent Operations Hub</h1>
+        <p class="lede">
+          Use this shared console for routing tests, mixed support requests, and internal agent QA.
+        </p>
+      </section>
+
+      <section class="controls">
+        <label id="audienceGroup">
+          Audience
+          <select id="audience">
+            <option value="auto">Auto route</option>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+            <option value="qa">QA</option>
+          </select>
+        </label>
+
+        <label>
+          Task
+          <select id="task">
+            <option value="auto">Auto select</option>
+          </select>
+        </label>
+
+        <button id="sampleBtn" type="button">Load example</button>
+      </section>
+
+      <section id="messages" class="messages" aria-live="polite"></section>
+
+      <form id="chatForm" class="composer">
+        <label class="composer-label" for="prompt">Message</label>
+        <textarea
+          id="prompt"
+          name="prompt"
+          rows="5"
+          placeholder="Examples: Find video ads for cat furniture. Check billing status for seller 0d162d0e-83ca-474d-a17c-8616475d4e99."
+          required
+        ></textarea>
+        <div class="composer-actions">
+          <button id="sendBtn" type="submit">Send</button>
+        </div>
+      </form>
+    </main>
+
+    <template id="messageTemplate">
+      <article class="message">
+        <div class="message-meta"></div>
+        <div class="message-body"></div>
+      </article>
+    </template>
+
+    <script src="/static/chat.js"></script>
+  </body>
+</html>

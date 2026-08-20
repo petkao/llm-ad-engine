@@ -1,0 +1,304 @@
+:root {
+  color-scheme: light;
+  --bg: #f4efe6;
+  --panel: rgba(255, 251, 245, 0.88);
+  --panel-border: rgba(106, 74, 48, 0.16);
+  --text: #1f1a16;
+  --muted: #6b625b;
+  --accent: #c45f34;
+  --accent-strong: #8f3f1e;
+  --buyer: #2a6f97;
+  --seller: #2f6b46;
+  --agent: #7a4f9a;
+  --shadow: 0 18px 50px rgba(74, 44, 22, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(196, 95, 52, 0.16), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(42, 111, 151, 0.16), transparent 30%),
+    linear-gradient(180deg, #f7f3ea 0%, var(--bg) 100%);
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+body[data-site="buyer"] {
+  --accent: #1d6a96;
+  --accent-strong: #144d6d;
+  --panel-border: rgba(29, 106, 150, 0.18);
+}
+
+body[data-site="seller"] {
+  --accent: #2c7a4b;
+  --accent-strong: #1e5a36;
+  --panel-border: rgba(44, 122, 75, 0.18);
+}
+
+.app-shell {
+  width: min(980px, calc(100vw - 32px));
+  margin: 32px auto;
+  padding: 28px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(76, 55, 35, 0.12);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-nav a[aria-current="page"] {
+  background: rgba(196, 95, 52, 0.12);
+  border-color: rgba(196, 95, 52, 0.24);
+}
+
+.hero h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 0.95;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font: 600 0.78rem/1.2 "Courier New", monospace;
+  color: var(--accent-strong);
+}
+
+.lede {
+  max-width: 62ch;
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 1.02rem;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+
+.controls label,
+.composer-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+select,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(76, 55, 35, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text);
+  padding: 14px 16px;
+}
+
+textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  background: var(--accent-strong);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+.messages {
+  min-height: 300px;
+  max-height: 52vh;
+  overflow: auto;
+  display: grid;
+  gap: 14px;
+  padding: 8px 2px 20px;
+}
+
+.message {
+  padding: 16px 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(76, 55, 35, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.message.user {
+  background: rgba(42, 111, 151, 0.1);
+  border-color: rgba(42, 111, 151, 0.16);
+}
+
+.message.assistant {
+  background: rgba(47, 107, 70, 0.08);
+  border-color: rgba(47, 107, 70, 0.14);
+}
+
+.message.error {
+  background: rgba(196, 54, 54, 0.08);
+  border-color: rgba(196, 54, 54, 0.18);
+}
+
+.message-meta {
+  margin-bottom: 8px;
+  font: 600 0.78rem/1.2 "Courier New", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.message-body {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.composer {
+  display: grid;
+  gap: 12px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.composer-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.quick-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  color: var(--muted);
+}
+
+.quick-chip {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+  border: 1px solid rgba(76, 55, 35, 0.12);
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.portal-card {
+  display: block;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(76, 55, 35, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.portal-card:hover {
+  transform: translateY(-2px);
+}
+
+.buyer-card:hover {
+  border-color: rgba(29, 106, 150, 0.35);
+}
+
+.seller-card:hover {
+  border-color: rgba(44, 122, 75, 0.35);
+}
+
+.hub-card:hover {
+  border-color: rgba(196, 95, 52, 0.35);
+}
+
+.portal-label {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font: 600 0.76rem/1.2 "Courier New", monospace;
+  color: var(--muted);
+}
+
+.portal-card h2 {
+  margin: 0 0 10px;
+}
+
+.portal-card p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.tool-summary {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(76, 55, 35, 0.12);
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100vw - 16px, 980px);
+    margin: 8px auto;
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .hero h1 {
+    line-height: 1;
+  }
+
+  .messages {
+    max-height: 46vh;
+  }
+}

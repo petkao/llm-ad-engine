@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Ad Engine Seller Assistant</title>
+    <link rel="stylesheet" href="/static/chat.css" />
+  </head>
+  <body data-site="seller" data-default-audience="seller">
+    <main class="app-shell">
+      <nav class="site-nav">
+        <a href="/buyer">Buyer site</a>
+        <a href="/seller" aria-current="page">Seller site</a>
+        <a href="/chat">Agent hub</a>
+      </nav>
+
+      <section class="hero">
+        <p class="eyebrow">Seller Assistant</p>
+        <h1>Manage Billing, Ads, and Support</h1>
+        <p class="lede">
+          Check billing status, inspect ad records, and create support tickets from one seller-focused workspace.
+        </p>
+      </section>
+
+      <section class="controls">
+        <label id="audienceGroup" class="hidden">
+          Audience
+          <select id="audience">
+            <option value="seller" selected>Seller</option>
+          </select>
+        </label>
+
+        <label>
+          Task
+          <select id="task">
+            <option value="billing">Billing</option>
+            <option value="ad-ops">Ad lookup</option>
+            <option value="support">Support</option>
+          </select>
+        </label>
+
+        <button id="sampleBtn" type="button">Load example</button>
+      </section>
+
+      <section class="quick-list">
+        <span>Try:</span>
+        <button class="quick-chip" type="button" data-prompt="Check billing status for seller 0d162d0e-83ca-474d-a17c-8616475d4e99.">Billing status</button>
+        <button class="quick-chip" type="button" data-prompt="Get ad aa622160-c5a9-4241-b8ca-77b30dc79a3a.">Ad lookup</button>
+        <button class="quick-chip" type="button" data-prompt="Create a billing support ticket for seller 0d162d0e-83ca-474d-a17c-8616475d4e99 with subject Billing help and description Please review current billing status.">Create ticket</button>
+      </section>
+
+      <section id="messages" class="messages" aria-live="polite"></section>
+
+      <form id="chatForm" class="composer">
+        <label class="composer-label" for="prompt">Seller request</label>
+        <textarea
+          id="prompt"
+          name="prompt"
+          rows="5"
+          placeholder="Example: Check billing status for seller 0d162d0e-83ca-474d-a17c-8616475d4e99."
+          required
+        ></textarea>
+        <div class="composer-actions">
+          <button id="sendBtn" type="submit">Send</button>
+        </div>
+      </form>
+    </main>
+
+    <template id="messageTemplate">
+      <article class="message">
+        <div class="message-meta"></div>
+        <div class="message-body"></div>
+      </article>
+    </template>
+
+    <script src="/static/chat.js"></script>
+  </body>
+</html>
