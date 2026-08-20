@@ -1,0 +1,27 @@
+.DS_Store
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+langgraph_app/.env
+mcp_server/.env
+
+# Local runtime artifacts
+*.log
+
+# Node and frontend artifacts
+node_modules/
+
+# Tooling metadata
+.codex/
+.agents/
