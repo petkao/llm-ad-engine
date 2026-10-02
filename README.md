@@ -138,12 +138,12 @@ gcloud run deploy ad-engine-mcp-v2 \
 
 ## Useful Docs
 
-- [langgraph_app/README.md](/Users/tzechungkao/llm-ad-engine/langgraph_app/README.md)
-- [mcp_server/README.md](/Users/tzechungkao/llm-ad-engine/mcp_server/README.md)
-- [docs/agent_entrypoints.md](/Users/tzechungkao/llm-ad-engine/docs/agent_entrypoints.md)
-- [docs/langgraph_cloud_run_deploy.md](/Users/tzechungkao/llm-ad-engine/docs/langgraph_cloud_run_deploy.md)
-- [docs/langgraph_smoke_tests.md](/Users/tzechungkao/llm-ad-engine/docs/langgraph_smoke_tests.md)
-- [docs/nim_gcp_migration_plan.md](/Users/tzechungkao/llm-ad-engine/docs/nim_gcp_migration_plan.md)
+- [langgraph_app/README.md](langgraph_app/README.md)
+- [mcp_server/README.md](mcp_server/README.md)
+- [docs/agent_entrypoints.md](docs/agent_entrypoints.md)
+- [docs/langgraph_cloud_run_deploy.md](docs/langgraph_cloud_run_deploy.md)
+- [docs/langgraph_smoke_tests.md](docs/langgraph_smoke_tests.md)
+- [docs/nim_gcp_migration_plan.md](docs/nim_gcp_migration_plan.md)
 
 ## Roadmap
 
