@@ -29,6 +29,7 @@ It uses:
 
 Agent app on Cloud Run:
 
+Endpoints require authentication; contact for demo access
 - base URL: `https://ad-engine-langgraph-chat-610270819686.us-west1.run.app`
 - portal: `https://ad-engine-langgraph-chat-610270819686.us-west1.run.app/portal`
 - buyer site: `https://ad-engine-langgraph-chat-610270819686.us-west1.run.app/buyer`
