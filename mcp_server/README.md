@@ -115,6 +115,7 @@ From the repo root:
 ```bash
 gcloud run deploy ad-engine-mcp-v2 \
   --source /Users/tzechungkao/llm-ad-engine/mcp_server \
+  --project ad-engine-4da45 \
   --region us-west1 \
   --allow-unauthenticated
 ```
@@ -125,6 +126,7 @@ At minimum, configure the backend base URL:
 
 ```bash
 gcloud run services update ad-engine-mcp-v2 \
+  --project ad-engine-4da45 \
   --region us-west1 \
   --update-env-vars AD_ENGINE_API_BASE_URL=https://ad-engine-api-610270819686.us-west1.run.app
 ```
@@ -133,6 +135,7 @@ If your backend requires auth for seller/admin routes, also set:
 
 ```bash
 gcloud run services update ad-engine-mcp-v2 \
+  --project ad-engine-4da45 \
   --region us-west1 \
   --update-env-vars AD_ENGINE_API_TOKEN=YOUR_BACKEND_TOKEN
 ```
@@ -141,6 +144,7 @@ If your backend seller endpoints use different paths, set the route overrides to
 
 ```bash
 gcloud run services update ad-engine-mcp-v2 \
+  --project ad-engine-4da45 \
   --region us-west1 \
   --update-env-vars GET_AD_BY_ID_PATH_TEMPLATE=/api/ads/{ad_id},SELLER_BILLING_STATUS_PATH_TEMPLATE=/api/sellers/{seller_id}/billing-status,CREATE_BILLING_SUPPORT_TICKET_PATH=/api/billing/support-tickets
 ```
