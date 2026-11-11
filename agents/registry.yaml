@@ -81,10 +81,7 @@ agents:
   - name: seller_support_agent
     prompt_file: prompts/seller_support_agent.md
     role: mixed_support_triage
-    hands_off_to:
-      - billing_agent
-      - ad_ops_agent
-      - ad_search_agent
+    hands_off_to: []
     tools:
       - get_ad_by_id
       - get_seller_billing_status

@@ -10,6 +10,67 @@ This package is the first runnable LangGraph scaffold for the LLM Ad Engine.
 - optional QA path
 - final response node
 
+This is the graph built in `graph.py`. Each node is one LLM step, and only the specialist nodes call MCP tools.
+
+```mermaid
+flowchart TD
+    S(["START"]) --> TR{"top_router<br/>picks a domain"}
+    TR -->|"buyer"| BR{"buyer_router"}
+    TR -->|"seller · default"| SR{"seller_router"}
+    TR -->|"qa"| QA["qa_agent<br/>rank_ads_for_buyer smoke check"]
+
+    BR -->|"default"| BS["buyer_search_agent<br/>search_video_ads_for_buyer<br/>or rank_ads_for_buyer"]
+    BR --> BE["buyer_match_explainer_agent<br/>explain_ad_match"]
+
+    SR --> SA["seller_ad_ops_agent<br/>get_ad_by_id"]
+    SR --> SB["seller_billing_agent<br/>get_seller_billing_status<br/>+ create_billing_support_ticket"]
+    SR -->|"default"| SS["seller_support_agent<br/>get_ad_by_id · explain_ad_match<br/>· get_seller_billing_status"]
+
+    BS & BE & SA & SB & SS & QA --> FR["final_response<br/>LLM writes the answer"]
+    FR --> E(["END"])
+```
+
+The routers can be skipped. The HTTP endpoints set `forced_domain` and `forced_specialist`, so only `/agent/run` uses the LLM routers:
+
+```mermaid
+flowchart LR
+    R1["POST /agent/run"] --> TR["top_router<br/>LLM decides"]
+    R2["POST /agent/buyer/search"] --> BS["buyer_search_agent"]
+    R3["POST /agent/buyer/video-search"] -->|"buyer_video_only = true"| BS
+    R4["POST /agent/buyer/explain"] --> BE["buyer_match_explainer_agent"]
+    R5["POST /agent/seller/billing"] --> SB["seller_billing_agent"]
+    R6["POST /agent/seller/ad-ops"] --> SA["seller_ad_ops_agent"]
+    R7["POST /agent/seller/support"] --> SS["seller_support_agent"]
+    R8["POST /agent/qa"] --> QA["qa_agent"]
+```
+
+Inside a specialist node, the pattern is the same each time:
+
+```mermaid
+sequenceDiagram
+    participant N as Specialist node
+    participant L as LLM · invoke_json
+    participant C as RemoteMCPClient
+    participant M as MCP server
+    participant F as final_response
+
+    N->>L: agent prompt + user text + JSON schema hint
+    L-->>N: arguments e.g. seller_id, ad_id, query
+    alt required id missing
+        N-->>F: state.error, so the error is returned as is
+    else arguments ok
+        N->>C: call_tool name, arguments
+        C->>M: initialize + tools/call over streamable HTTP
+        M-->>C: CallToolResult
+        C-->>N: tool_name, is_error, structured_content, text_content, parsed_json
+        N-->>F: state.tool_results
+        F->>L: final_response_agent.md + tool_results
+        alt LLM call fails
+            F-->>F: _fallback_response formats the last tool result
+        end
+    end
+```
+
 ## LLM Stack
 
 - model: `nvidia/nemotron-3-ultra-550b-a55b`
