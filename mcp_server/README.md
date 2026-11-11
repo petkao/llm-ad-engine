@@ -23,6 +23,55 @@ This folder contains a standalone Python FastMCP server for your deployed LLM Ad
 5. `get_seller_billing_status`
 6. `create_billing_support_ticket`
 
+How each tool maps to a backend route, including the fallbacks:
+
+```mermaid
+flowchart LR
+    subgraph Clients["MCP clients"]
+        LG["langgraph_app"]
+        ADK["adk_app"]
+        Other["stdio clients<br/>e.g. Claude Desktop"]
+    end
+
+    subgraph Server["server.py · FastMCP"]
+        T1["search_video_ads_for_buyer"]
+        T2["rank_ads_for_buyer"]
+        T3["explain_ad_match"]
+        T4["get_ad_by_id"]
+        T5["get_seller_billing_status"]
+        T6["create_billing_support_ticket"]
+        VF["keep format == video"]
+        FX["build explanation from<br/>ranked matches"]
+    end
+
+    subgraph Backend["ad-engine-api"]
+        SM["POST /api/buyer/semantic-match"]
+        EX["POST EXPLAIN_AD_MATCH_PATH<br/>blank by default"]
+        AD["GET /api/ads/{ad_id}"]
+        ADS["GET /api/ads"]
+        BS["GET /api/sellers/{seller_id}/billing-status"]
+        SL["GET /api/sellers"]
+        TK["POST /api/billing/support-tickets"]
+    end
+
+    LG & ADK -->|"streamable HTTP /mcp"| Server
+    Other -->|"stdio"| Server
+
+    T1 --> SM
+    SM -.-> VF
+    T2 --> SM
+    T3 -->|"if configured"| EX
+    T3 -.->|"blank or 404"| FX
+    FX --> SM
+    T4 --> AD
+    AD -.->|"404: filter list by id"| ADS
+    T5 --> BS
+    BS -.->|"404: filter list by id"| SL
+    T6 --> TK
+```
+
+Solid lines are the primary call; dotted lines are the fallback path. All backend calls go through `api_client.py`, which adds `AD_ENGINE_API_TOKEN` as a bearer token when it is set.
+
 ## Setup
 
 ```bash
@@ -175,6 +224,19 @@ The server also includes two built-in fallbacks when dedicated per-record endpoi
 This is useful when the backend exposes list endpoints like `/api/ads` and `/api/sellers` but does not expose dedicated routes like `/api/ads/{id}` or `/api/sellers/{seller_id}/billing-status`.
 
 ## Important Constraint
+
+```mermaid
+flowchart LR
+    LG["langgraph_app"]
+    Old["ad-engine-mcp<br/>TypeScript, buyer tools only<br/>source not in this repo"]
+    New["ad-engine-mcp-v2<br/>this Python FastMCP server<br/>buyer + seller tools"]
+    BE["ad-engine-api"]
+
+    LG -.->|"before"| Old
+    LG -->|"now: MCP_SERVER_URL"| New
+    Old --> BE
+    New --> BE
+```
 
 The currently deployed MCP service at `ad-engine-mcp` is a separate TypeScript deployment whose source is not present in this workspace. That means this repo cannot directly patch that running service in place.
 
