@@ -1,16 +1,70 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from .config import load_config
-from .llm_json import invoke_json
+from .llm_json import invoke_json, invoke_text
 from .mcp_client import RemoteMCPClient
-from .models import get_llm
 from .prompts import load_prompt
 from .state import GraphState
+
+_UUID_RE = re.compile(
+    r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b",
+    re.IGNORECASE,
+)
+_SELLER_WORDS = (
+    "seller", "billing", "invoice", "balance", "ticket", "subscription",
+    "payout", "charge", "refund", "my ad", "my ads", "campaign",
+)
+_QA_WORDS = ("smoke test", "regression", "qa check", "health check", "validate the tools")
+
+
+def _has_any_word(text: str, words: tuple[str, ...]) -> bool:
+    """True if any of the words or phrases appears as a whole word in the text."""
+    lowered = (text or "").lower()
+    return any(re.search(rf"\b{re.escape(word)}\b", lowered) for word in words)
+
+
+def _first_uuid(text: str) -> str:
+    """Return the first UUID in the text, or an empty string."""
+    match = _UUID_RE.search(text or "")
+    return match.group(0).lower() if match else ""
+
+
+_BILLING_WORDS = (
+    "billing", "invoice", "balance", "ticket", "subscription",
+    "payout", "charge", "refund", "plan",
+)
+_EXPLAIN_WORDS = ("why", "explain", "match")
+
+
+def _guess_buyer_specialist(text: str) -> str:
+    """Keyword routing for the buyer subgraph when the LLM gives no usable answer."""
+    if _first_uuid(text) and _has_any_word(text, _EXPLAIN_WORDS):
+        return "buyer_match_explainer_agent"
+    return "buyer_search_agent"
+
+
+def _guess_seller_specialist(text: str) -> str:
+    """Keyword routing for the seller subgraph when the LLM gives no usable answer."""
+    if _has_any_word(text, _BILLING_WORDS):
+        return "seller_billing_agent"
+    if _first_uuid(text) and _has_any_word(text, ("ad",)):
+        return "seller_ad_ops_agent"
+    return "seller_support_agent"
+
+
+def _guess_domain(text: str) -> str:
+    """Keyword routing used only when the LLM router gives no usable answer."""
+    if _has_any_word(text, _QA_WORDS):
+        return "qa"
+    if _has_any_word(text, _SELLER_WORDS):
+        return "seller"
+    return "buyer"
 
 
 def _append_tool_result(state: GraphState, result: dict[str, Any]) -> list[dict[str, Any]]:
@@ -30,22 +84,6 @@ def _tool_payload(tool_result: dict[str, Any]) -> Any:
         or tool_result.get("text_content")
         or {}
     )
-
-
-def _stringify_message_content(content: Any) -> str:
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        parts: list[str] = []
-        for item in content:
-            if isinstance(item, str):
-                parts.append(item)
-            elif isinstance(item, dict):
-                text = item.get("text")
-                if isinstance(text, str):
-                    parts.append(text)
-        return "\n".join(part for part in parts if part).strip()
-    return str(content)
 
 
 def _fallback_response(state: GraphState, error: Exception | None = None) -> str:
@@ -162,9 +200,10 @@ async def top_router_node(state: GraphState) -> GraphState:
         state["user_input"],
         {"domain": "buyer", "reason": "short reason"},
     )
-    domain = str(payload.get("domain", "seller")).strip().lower()
+    domain = str(payload.get("domain", "")).strip().lower()
     if domain not in {"buyer", "seller", "qa"}:
-        domain = "seller"
+        domain = _guess_domain(state["user_input"])
+        return {"domain": domain, "route_reason": "keyword_fallback"}
     return {"domain": domain, "route_reason": str(payload.get("reason", ""))}
 
 
@@ -178,9 +217,12 @@ async def buyer_router_node(state: GraphState) -> GraphState:
         state["user_input"],
         {"specialist": "buyer_search_agent", "reason": "short reason"},
     )
-    specialist = str(payload.get("specialist", "buyer_search_agent")).strip()
+    specialist = str(payload.get("specialist", "")).strip()
     if specialist not in {"buyer_search_agent", "buyer_match_explainer_agent"}:
-        specialist = "buyer_search_agent"
+        return {
+            "specialist": _guess_buyer_specialist(state["user_input"]),
+            "route_reason": "keyword_fallback",
+        }
     return {"specialist": specialist, "route_reason": str(payload.get("reason", ""))}
 
 
@@ -198,13 +240,16 @@ async def seller_router_node(state: GraphState) -> GraphState:
         state["user_input"],
         {"specialist": "seller_support_agent", "reason": "short reason"},
     )
-    specialist = str(payload.get("specialist", "seller_support_agent")).strip()
+    specialist = str(payload.get("specialist", "")).strip()
     if specialist not in {
         "seller_ad_ops_agent",
         "seller_billing_agent",
         "seller_support_agent",
     }:
-        specialist = "seller_support_agent"
+        return {
+            "specialist": _guess_seller_specialist(state["user_input"]),
+            "route_reason": "keyword_fallback",
+        }
     return {"specialist": specialist, "route_reason": str(payload.get("reason", ""))}
 
 
@@ -256,7 +301,7 @@ async def buyer_match_explainer_node(state: GraphState) -> GraphState:
         },
     )
 
-    ad_id = str(payload.get("ad_id", "")).strip()
+    ad_id = str(payload.get("ad_id", "")).strip() or _first_uuid(state["user_input"])
     if not ad_id:
         return {"error": "An ad_id is required to explain why a specific ad matched."}
 
@@ -281,7 +326,7 @@ async def seller_ad_ops_node(state: GraphState) -> GraphState:
         state["user_input"],
         {"ad_id": ""},
     )
-    ad_id = str(payload.get("ad_id", "")).strip()
+    ad_id = str(payload.get("ad_id", "")).strip() or _first_uuid(state["user_input"])
     if not ad_id:
         return {"error": "An ad_id is required to inspect an ad record."}
 
@@ -306,7 +351,7 @@ async def seller_billing_node(state: GraphState) -> GraphState:
             "priority": "medium",
         },
     )
-    seller_id = str(payload.get("seller_id", "")).strip()
+    seller_id = str(payload.get("seller_id", "")).strip() or _first_uuid(state["user_input"])
     if not seller_id:
         return {"error": "A seller_id is required for seller billing actions."}
 
@@ -427,7 +472,6 @@ async def final_response_node(state: GraphState) -> GraphState:
     if state.get("error"):
         return {"response": state["error"]}
 
-    llm = get_llm()
     raw_json = json.dumps(
         {
             "domain": state.get("domain"),
@@ -439,7 +483,7 @@ async def final_response_node(state: GraphState) -> GraphState:
         default=str,
     )
     try:
-        response = await llm.ainvoke(
+        text = await invoke_text(
             [
                 SystemMessage(content=load_prompt("final_response_agent.md")),
                 HumanMessage(
@@ -450,6 +494,6 @@ async def final_response_node(state: GraphState) -> GraphState:
                 ),
             ]
         )
-        return {"response": _stringify_message_content(response.content)}
+        return {"response": text}
     except Exception as exc:
         return {"response": _fallback_response(state, exc)}
