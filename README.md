@@ -185,31 +185,38 @@ AD_ENGINE_API_TOKEN=
 
 ## Deploy
 
-Deploy the LangGraph chat service from the repo root:
+Both services run in the GCP project `ad-engine-4da45`, region `us-west1`. Always pass `--project`: the gcloud default project on this machine is a different one.
+
+The env vars, including `LLM_API_KEY` and `AD_ENGINE_API_TOKEN`, are already set on the services. A redeploy without `--set-env-vars` keeps them, so routine deploys only push new code.
+
+Redeploy the LangGraph chat service from the repo root:
 
 ```bash
 gcloud run deploy ad-engine-langgraph-chat \
   --source . \
-  --region us-west1 \
-  --allow-unauthenticated \
-  --set-env-vars LLM_BASE_URL=https://integrate.api.nvidia.com/v1 \
-  --set-env-vars LLM_MODEL=nvidia/nemotron-3-ultra-550b-a55b \
-  --set-env-vars MCP_SERVER_URL=https://ad-engine-mcp-v2-610270819686.us-west1.run.app/mcp \
-  --set-env-vars LLM_TEMPERATURE=0.1 \
-  --set-env-vars SYNTHETIC_DEVICE_ID=langgraph-buyer-device \
-  --set-env-vars DEFAULT_SEARCH_LIMIT=5 \
-  --set-env-vars DEFAULT_EXPLAIN_LIMIT=10 \
-  --set-env-vars LLM_API_KEY=YOUR_NVIDIA_API_KEY
+  --project ad-engine-4da45 \
+  --region us-west1
 ```
 
-Deploy the MCP server:
+Redeploy the MCP server:
 
 ```bash
 gcloud run deploy ad-engine-mcp-v2 \
-  --source /Users/tzechungkao/llm-ad-engine/mcp_server \
-  --region us-west1 \
-  --allow-unauthenticated
+  --source mcp_server \
+  --project ad-engine-4da45 \
+  --region us-west1
 ```
+
+To change a setting, use `--update-env-vars`, which changes only the variables you name. Don't use `--set-env-vars` on an existing service: it replaces the whole list, so any variable you leave out (such as the API key) is deleted.
+
+```bash
+gcloud run services update ad-engine-langgraph-chat \
+  --project ad-engine-4da45 \
+  --region us-west1 \
+  --update-env-vars LLM_MODEL=nvidia/nemotron-3-ultra-550b-a55b
+```
+
+To rotate the NVIDIA key, run the same command with `LLM_API_KEY=<new key>`. A first-time setup from scratch is covered in [docs/langgraph_cloud_run_deploy.md](docs/langgraph_cloud_run_deploy.md).
 
 ## Useful Docs
 
